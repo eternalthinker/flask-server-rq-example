@@ -9,7 +9,7 @@ from rq import Queue, Worker
 from rq.registry import FinishedJobRegistry
 import requests
 
-from videogen import videogen
+from videogen import generate_video
 
 
 app = Flask(__name__)
@@ -48,7 +48,7 @@ def genvid():
             # Parse job command and queue video generation
             if reqtype == "command":
                 jobid = jreq["job_id"]
-                videoq.enqueue(videogen, jobid)
+                videoq.enqueue(generate_video, jobid)
                 results["job_id"] = jobid
                 results["type"] = "ack"
 
