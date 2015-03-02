@@ -1,6 +1,12 @@
 # Project specific
 video/
 pid/
+videos/
+images/
+*flv
+*mp4
+*png
+*jpg
 
 # Eclipse
 .classpath
