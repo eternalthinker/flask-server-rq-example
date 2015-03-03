@@ -15,7 +15,7 @@ p_names = [
     "The Born to Love You Bangle"
 ]
 p_prices = [5000, 10000, 15000]
-num_products = 3
+num_products = 3  # If this number is 2 or 1, the details will be centered correctly
 
 vidconfig = {
     # In percentage of video dimensions
@@ -25,7 +25,7 @@ vidconfig = {
     # In percentage of overlay dimensions
     "text_padding_horizontal": 1,
     "text_padding_top": 5,
-    "text_max_width": 30,
+    "text_max_width": 30,  # In case there's too much space, this limits text area width 
     "price_padding_top": 50,
 
     # Absolute values
@@ -109,6 +109,9 @@ def get_fitted_txt(text, font, maxwidth):
 
 
 def get_max_fitting_font(text, fontpath, maxwidth, maxsize, minsize):
+    """Starts with font of maxsize, decrements size until 
+       text fits in maxwidth, or min font size is reached
+    """
     fontsize = maxsize
     font = ImageFont.truetype(fontpath, fontsize)
     while font.getsize(text)[0] > maxwidth:
@@ -132,7 +135,7 @@ def generate_video(jobid):
     text_max_width = get_percentage_val(basevid.w, vidconfig["text_max_width"])
     price_padding_top = get_percentage_val(overlay_height, vidconfig["price_padding_top"])
 
-    overlays = []  # List of final units for overlay
+    overlays = []  # List of product units (image, text, price) for overlay
 
     # Make product images for overlay
     for i in range(num_products):
@@ -149,11 +152,11 @@ def generate_video(jobid):
     max_txt_width = min(max_txt_width_available, text_max_width)
     total_unused_width = total_max_txt_width - text_max_width*num_products
 
-    # Attempt to find maximum possible font size for longest product name
-    print "Computing optimal font size.."
     fontpath = vidconfig["fontpath"]
     min_fontsize = vidconfig["min_fontsize"]
     max_fontsize = vidconfig["max_fontsize"]
+    # Find maximum possible font size for longest product name
+    print "Computing optimal font size for title.."
     longest_pname = max(p_names, key=len)
     font = get_max_fitting_font(longest_pname, fontpath, max_txt_width, max_fontsize, min_fontsize)
     
@@ -162,10 +165,12 @@ def generate_video(jobid):
         img = get_fitted_txt(p_names[i], font, max_txt_width)
         overlays[i]["title"] = img
 
-    # Make product prices for overlay
+    # Find maximum possible font size for longest price text
     longest_price = max([str(p) for p in p_prices], key=len)
     price_max_fontsize = vidconfig["price_max_fontsize"]
     font = get_max_fitting_font(longest_price, fontpath, max_txt_width, price_max_fontsize, min_fontsize)
+    
+    # Make product prices for overlay
     for i in range(num_products):    
         price_img = get_fitted_txt(str(p_prices[i]), font, max_txt_width)
         overlays[i]["price"] = price_img
