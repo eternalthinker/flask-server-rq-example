@@ -86,7 +86,9 @@ def get_fitted_txt(text, font, maxwidth):
             curtext = ""
             for i in range(start, end):
                 curtext += words[i] + " "
-        else:  # Only one word
+        else:  
+            # Only one word. Means this word is overflowing
+            # TODO: return error?
             end += 1
         # Write text to image
         size = font.getsize(curtext)
