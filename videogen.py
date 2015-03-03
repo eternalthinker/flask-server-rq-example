@@ -1,4 +1,4 @@
-import os
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from moviepy.editor import VideoFileClip, ImageClip, CompositeVideoClip
 
@@ -201,11 +201,11 @@ def generate_video(jobid):
         background.paste(product, (p_offsetx, p_offsety), product)
         background.paste(title, (t_offsetx, t_offsety), title)
         background.paste(price, (prc_offsetx, prc_offsety), price)
-    background.save(str(jobid) + "overlay.png", transparency = 0, optimize = 1)
+    #background.save(str(jobid) + "overlay.png", transparency = 0, optimize = 1)
 
     #return  # Skip video creation
 
-    img_clip = (ImageClip(str(jobid) + "overlay.png")
+    img_clip = (ImageClip(np.array(background))
                 .set_position(('center', 'bottom'))
                 .set_duration(17)
                )
@@ -214,7 +214,6 @@ def generate_video(jobid):
     vidresult = CompositeVideoClip([basevid, img_clip])  # Overlay text on video
     print "Saving final video file.."
     vidresult.write_videofile(vid_dest_dir + "/" + vid_name + "_" + str(jobid) + ".mp4", fps=25)  # Many options...
-    os.remove(str(jobid) + "overlay.png")
 
     result = {}
     result["job_id"] = jobid
@@ -222,5 +221,5 @@ def generate_video(jobid):
 
 
 if __name__ == '__main__':
-    #make_video(1)
-    pass
+    generate_video(1)
+    #pass
