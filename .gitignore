@@ -12,6 +12,7 @@ images/
 .classpath
 .project
 .settings/
+.pydevproject
 
 # Intellij
 .idea/

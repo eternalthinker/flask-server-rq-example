@@ -97,7 +97,6 @@ def get_fitted_txt(text, font, maxwidth):
         draw.text((0,0), curtext, fill=fontcolor, font=font)
         line_imgs.append(lineimg)
     # Combine line images
-    linegap = 5
     totalwidth = max( [img.size[0] for img in line_imgs] )
     totalheight = lineheight * len(line_imgs)
     finaltext = Image.new("RGBA", (totalwidth, totalheight))

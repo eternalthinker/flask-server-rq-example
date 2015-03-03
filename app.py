@@ -1,11 +1,10 @@
-import os
 import threading
 import json
 #from PIL import Image
 
 from flask import Flask, request, jsonify
 from redis import Redis
-from rq import Queue, Worker
+from rq import Queue
 from rq.registry import FinishedJobRegistry
 import requests
 
@@ -53,7 +52,7 @@ def genvid():
                 results["type"] = "ack"
 
     if error is not None: 
-    	return error 
+        return error 
     return jsonify(results)
 
 
@@ -75,7 +74,7 @@ def pollresults():
         try:
             response = requests.post(url, data=json.dumps(result), headers=headers)
             print response.json()
-        except Exception as e:
+        except:
             print "Connection error : Master unavailable"
 
     threading.Timer(5.0, pollresults).start()
