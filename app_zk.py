@@ -9,6 +9,9 @@ from redis import Redis
 from rq import Queue
 from rq.registry import FinishedJobRegistry
 import requests
+from kazoo.client import KazooClient
+from kazoo.client import KazooState
+from kazoo.protocol.states import EventType
 
 from videogen import generate_video
 
@@ -17,12 +20,36 @@ app = Flask(__name__)
 #export APP_SETTINGS="config.DevelopmentConfig"
 #app.config.from_object(os.environ['APP_SETTINGS'])
 
-IMAGE_PATH = "."
-#background_image = Image.open("IMAGE_PATH + "/" + transp_edited.png")
-
 redis_conn = Redis(port=5001)
 videoq = Queue('videos', connection=redis_conn)
 fin_registry = FinishedJobRegistry(connection=redis_conn, name='videos')
+
+
+# === ZooKeeper definitions
+def self_listener(state):
+    pass
+
+
+def watch_master(event):
+    pass
+
+
+SERVER_PORT = 5010
+
+zk = KazooClient(hosts='localhost:2181')
+zk.start()
+zk.add_listener(self_listener)
+data = {}
+data["serviceEndpoint"] = { "host": "localhost", "port": SERVER_PORT }
+data["status"] = "ALIVE"
+data["shard"] = 1
+data["additionalEndPoints"] = []
+jdata = json.dumps(data)
+zk.create(path="/videogen/slaves/member_", value=jdata, sequence=True, makepath=True)
+# Put a watch on znode
+#children = zk.get_children("/videogen/master", watch=watch_master)
+# === End of ZooKeeper definitions
+
 
 @app.route('/genvid/', methods=['GET', 'POST'])
 def genvid():
@@ -49,7 +76,7 @@ def genvid():
             # Parse job command and queue video generation
             if reqtype == "command":
                 jobid = jreq["job_id"]
-                videoq.enqueue(generate_video, jobid)
+                #videoq.enqueue(generate_video, jobid)
                 results["job_id"] = jobid
                 results["type"] = "ack"
 
@@ -83,6 +110,6 @@ def pollresults():
 
 
 if __name__ == '__main__':
-    threading.Timer(5.0, pollresults).start()
-    app.run(debug=False)
+    #threading.Timer(5.0, pollresults).start()
+    app.run(port=SERVER_PORT, debug=False)
     #app.run(host='0.0.0.0')

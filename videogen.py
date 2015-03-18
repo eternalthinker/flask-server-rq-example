@@ -1,3 +1,4 @@
+from subprocess import call
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from moviepy.editor import VideoFileClip, ImageClip, CompositeVideoClip
@@ -215,9 +216,24 @@ def generate_video(jobid):
                )
 
     vid_name = prefix + "_" + "_".join([str(pid) for pid in pids])
+    vid_name = vid_dest_dir + "/" + vid_name + "_" + str(jobid)
     vidresult = CompositeVideoClip([basevid, img_clip])  # Overlay text on video
-    print "Saving final video file.."
-    vidresult.write_videofile(vid_dest_dir + "/" + vid_name + "_" + str(jobid) + ".mp4", fps=25)  # Many options...
+    print "Saving final video file.. MP4"
+    vidresult.write_videofile(vid_name + ".mp4", fps=25)  # Many options...
+    print "Converting final video file.. WEBM"
+    retcode = call(["ffmpeg", "-i", vid_name + ".mp4", 
+                    "-c:v", "libvpx", 
+                    vid_name + ".webm", 
+                    #"-preset", "slow",
+                    "-y"
+                    ])
+    print "Converting final video file.. FLV"
+    retcode = call(["ffmpeg", "-i", vid_name + ".mp4", 
+                    "-c:v", "libx264", 
+                    vid_name + ".flv", 
+                    "-preset", "veryslow",
+                    "-y"
+                    ])
 
     result = {}
     result["job_id"] = jobid
