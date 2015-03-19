@@ -228,13 +228,13 @@ def generate_video(jobid):
                     "-y",
                     vid_name + ".webm" 
                     ])
-    '''print "Converting final video file.. FLV"
+    print "Converting final video file.. FLV"
     retcode = call(["ffmpeg", "-i", vid_name + ".mp4", 
                     "-c:v", "libx264", 
                     "-preset", "veryslow",
                     "-y",
                     vid_name + ".flv" 
-                    ])'''
+                    ])
 
     result = {}
     result["job_id"] = jobid
