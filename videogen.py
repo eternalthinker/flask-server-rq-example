@@ -1,6 +1,7 @@
-from subprocess import call
-import numpy as np
+from subprocess import call, Popen, PIPE
 from PIL import Image, ImageDraw, ImageFont
+
+import numpy as np
 from moviepy.editor import VideoFileClip, ImageClip, CompositeVideoClip
 
 img_src_dir = "./images"
@@ -50,6 +51,27 @@ def remove_whites(img):
         else:
             new_data.append(pixel)
     img.putdata(new_data)
+
+
+def get_bit_rate_str(video_file_path):
+    """Parse ffprobe output to find video bit rate
+       Rounds to multiple of 1000
+       Returns formatted string which can be used as param in ffmpeg
+    """
+    ps = Popen(["ffprobe", "-v", "error", "-show_format", video_file_path], stdout=PIPE)
+    output, _ = ps.communicate()
+    output1 = "1"
+    for line in output.split('\n'):
+        if "bit_rate" in line:
+            output1 = line.split("=")[1]
+            break
+    try:
+        bitrate = int(output1)/1000
+        if bitrate < 1000:
+            return str(bitrate) + "k"
+        return str(bitrate/1000) + "M"
+    except:
+        pass
 
 
 def get_percentage_val(val, percentage):
@@ -218,26 +240,28 @@ def generate_video(jobid):
     vid_name = prefix + "_" + "_".join([str(pid) for pid in pids])
     vid_name = vid_dest_dir + "/" + vid_name + "_" + str(jobid)
     vidresult = CompositeVideoClip([basevid, img_clip])  # Overlay text on video
+    bitrate = get_bit_rate_str(basevid_path)
+    print bitrate
     print "Saving final video file.. MP4"
     vidresult.write_videofile(vid_name + ".mp4", 
                               fps=25, 
                               ffmpeg_params=[
-                                  "-b:v", "1M",
-                                  "-maxrate", "1M"
+                                  "-b:v", bitrate,
+                                  "-maxrate", bitrate
                               ])
     print "Converting final video file.. WEBM"
     retcode = call(["ffmpeg", "-i", vid_name + ".mp4", 
                     "-c:v", "libvpx", 
                     "-crf", "4",
-                    "-b:v", "1M",
+                    "-b:v", bitrate,
                     "-y",
                     vid_name + ".webm" 
                     ])
     print "Converting final video file.. FLV"
     retcode = call(["ffmpeg", "-i", vid_name + ".mp4", 
                     "-c:v", "libx264", 
-                    "-b:v", "1M",
-                    "-maxrate", "1M",
+                    "-b:v", bitrate,
+                    "-maxrate", bitrate,
                     "-y",
                     vid_name + ".flv" 
                     ])
