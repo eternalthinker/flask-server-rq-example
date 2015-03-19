@@ -219,7 +219,12 @@ def generate_video(jobid):
     vid_name = vid_dest_dir + "/" + vid_name + "_" + str(jobid)
     vidresult = CompositeVideoClip([basevid, img_clip])  # Overlay text on video
     print "Saving final video file.. MP4"
-    vidresult.write_videofile(vid_name + ".mp4", fps=25, preset="slow")  # Many options...
+    vidresult.write_videofile(vid_name + ".mp4", 
+                              fps=25, 
+                              ffmpeg_params=[
+                                  "-b:v", "1M",
+                                  "-maxrate", "1M"
+                              ])
     print "Converting final video file.. WEBM"
     retcode = call(["ffmpeg", "-i", vid_name + ".mp4", 
                     "-c:v", "libvpx", 
@@ -231,7 +236,8 @@ def generate_video(jobid):
     print "Converting final video file.. FLV"
     retcode = call(["ffmpeg", "-i", vid_name + ".mp4", 
                     "-c:v", "libx264", 
-                    "-preset", "veryslow",
+                    "-b:v", "1M",
+                    "-maxrate", "1M",
                     "-y",
                     vid_name + ".flv" 
                     ])
