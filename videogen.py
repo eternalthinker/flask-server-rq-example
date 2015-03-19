@@ -58,20 +58,20 @@ def get_bit_rate_str(video_file_path):
        Rounds to multiple of 1000
        Returns formatted string which can be used as param in ffmpeg
     """
-    ps = Popen(["ffprobe", "-v", "error", "-show_format", video_file_path], stdout=PIPE)
-    output, _ = ps.communicate()
-    output1 = "1"
-    for line in output.split('\n'):
-        if "bit_rate" in line:
-            output1 = line.split("=")[1]
-            break
     try:
+        ps = Popen(["ffprobe", "-v", "error", "-show_format", video_file_path], stdout=PIPE)
+        output, _ = ps.communicate()
+        output1 = "1"
+        for line in output.split('\n'):
+            if "bit_rate" in line:
+                output1 = line.split("=")[1]
+                break
         bitrate = int(output1)/1000
         if bitrate < 1000:
             return str(bitrate) + "k"
         return str(bitrate/1000) + "M"
     except:
-        pass
+        return "1M"
 
 
 def get_percentage_val(val, percentage):
