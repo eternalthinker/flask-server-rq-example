@@ -225,18 +225,18 @@ def generate_video(jobid):
         background.paste(product, (p_offsetx, p_offsety), product)
         background.paste(title, (t_offsetx, t_offsety), title)
         background.paste(price, (prc_offsetx, prc_offsety), price)
-    #background.save(str(jobid) + "overlay.png", transparency = 0, optimize = 1)
+    background.save(str(jobid) + "overlay.png", transparency = 0, optimize = 1)
 
     #return  # Skip video creation
 
-    img_clip = (ImageClip(np.array(background))
-                .set_position(('center', 'bottom'))
-                .set_duration(17)
-               )
+    #img_clip = (ImageClip(np.array(background))
+    #            .set_position(('center', 'bottom'))
+    #            .set_duration(17)
+    #           )
 
     vid_name = prefix + "_" + "_".join([str(pid) for pid in pids])
     vid_name = vid_dest_dir + "/" + vid_name + "_" + str(jobid)
-    vidresult = CompositeVideoClip([basevid, img_clip])  # Overlay text on video
+    #vidresult = CompositeVideoClip([basevid, img_clip])  # Overlay text on video
     
     bitrate = get_bit_rate_str(basevid_path)
     avg_bitrate = str(int(bitrate * 0.85)) + "k"
@@ -246,12 +246,26 @@ def generate_video(jobid):
     # libvpx (wedbm) will have a resultant bitrate which is closer to the source rate
     
     print "Saving final video file.. MP4"
-    vidresult.write_videofile(vid_name + ".mp4", 
-                              fps=25, 
-                              ffmpeg_params=[
-                                  "-b:v", avg_bitrate,
-                                  "-maxrate", avg_bitrate
-                              ])
+    start_time = 4
+    end_time = 17
+    fps = 25
+    fade_duration = 20
+    filter = (("[1:v] fade=in:%d:%d:alpha=1, " +
+             "fade=out:%d:%d:alpha=1 [banner];" + 
+             "[0:v][banner] overlay=0:%d") % 
+             (start_time*fps, fade_duration, end_time*fps, fade_duration, 
+              basevid.h - overlay_height))
+    retcode = call(["ffmpeg", "-i", basevid_path, "-loop", "1",
+                    "-i", str(jobid) + "overlay.png", "-loop", "1",
+                    "-filter_complex", filter,
+                    "-c:v", "libx264", 
+                    "-strict", "-2",
+                    "-b:v", avg_bitrate,
+                    "-maxrate", avg_bitrate,
+                    "-y",
+                    vid_name + ".mp4" 
+                    ])
+    
     print "Converting final video file.. WEBM"
     retcode = call(["ffmpeg", "-i", vid_name + ".mp4", 
                     "-c:v", "libvpx", 
@@ -260,6 +274,7 @@ def generate_video(jobid):
                     "-y",
                     vid_name + ".webm" 
                     ])
+    
     print "Converting final video file.. FLV"
     retcode = call(["ffmpeg", "-i", vid_name + ".mp4", 
                     "-c:v", "libx264", 
